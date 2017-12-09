@@ -9,8 +9,8 @@ clear
 clc
 close all
 
-compute_metacognition = 0;
-save_metacognition_data = 0;
+compute_metacognition = 1;
+save_metacognition_data = 1;
 
 % Subjects
 subject_id = [1 2 3 5 6 7 9 10 11 15 16 17 19 20 22 24 26 27];
