@@ -35,7 +35,7 @@ errorbar(1.1:1:3.1,mean(y),sem2,'.k','LineWidth',0.75,'Markersize',10)
 errorbar(0.9:1:2.9,mean(y),sem1,'.k','LineWidth',1.75,'Markersize',10)
 ylabel({'';ylab;''})
 xlabel({'TMS Site';''},'FontSize',20)
-sigstar({[1 2],[1 3],[2,3]},pval)
+sigstar({[2 3],[1 2],[1,3]},[pval(3), pval(1), pval(2)])
 hold off
 
 end

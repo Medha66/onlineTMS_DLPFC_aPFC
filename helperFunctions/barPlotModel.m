@@ -23,7 +23,7 @@ for condition = 1:3
 end
 alpha(0.6)
 xt = get(gca,'XTick');
-set(gca,'XTick',1:3,'FontSize',16,'XTickLabel',{'None','Extracted signal','Meta noise'})
+set(gca,'XTick',1:3,'FontSize',16,'XTickLabel',{'None','Sensory readout','Meta noise'})
 ylim(ylimits);
 ylabel(ylab,'FontSize',24)
 xlabel({'Parameter changed'},'FontSize',24)
