@@ -28,8 +28,8 @@ clear
 clc
 close all
 
-save_results = 1;
-simulate = 1;
+save_results = 0;
+simulate = 0;
 
 % Add helper functions
 currentDir = pwd;
@@ -62,7 +62,7 @@ if simulate
         %Each stimulus class has a normal sensory response distribution
         %centered on the mean for that stimulus class
         %mean for stimulus = 0: -mu/2, mean for stimulus = 1: mu/2
-        muStim = [-mu(condition)/2*ones(1,N/2), mu(condition)/2*ones(1,N/2)];
+        muStim = [-mu/2*ones(1,N/2), mu/2*ones(1,N/2)];
         
         %Generate the sensory response values for each stimulus
         rsens = normrnd(muStim, sigma, 1, N);
@@ -126,8 +126,10 @@ end
 
 
 %  Plot confidence
-barPlotModel(confidence,'Mean Confidence',[2.2 2.63])
+barPlotModel(confidence,'Confidence',[2.2 2.75])
+saveFigure('Figure5B')
 
 % Plot change in mratio
 delta_mratio = half_M_ratio(:,2)'- half_M_ratio(:,1)';
-barPlotModel(delta_mratio,'\DeltaM_{Ratio}',[-0.3 0.3])
+barPlotModel(delta_mratio,'\DeltaM_{ratio}',[-0.3 0.3])
+saveFigure('Figure5C')

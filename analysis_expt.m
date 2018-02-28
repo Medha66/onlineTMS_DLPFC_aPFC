@@ -1,4 +1,4 @@
-% analysis for the experiment
+ % analysis for the experiment
 
 %Experiment: Subjects performed a visual discrimination task while providing confidence ratings 
 %TMS: Subjects received TMS to one of the three sites on each block - S1 (control), DLPFC or aPFC 
@@ -64,20 +64,32 @@ for subject=subjects
         if compute_metacognition
             meta_MLE = type2_SDT_MLE(stim(tmsSite==condition),resp(tmsSite==condition),conf(tmsSite==condition),nratings, [], 1);
             mratio(subject,condition) = meta_MLE.M_ratio;
+            metadprime(subject,condition) = meta_MLE.meta_da;
             meta_MLE1 = type2_SDT_MLE(stim(tmsSite==condition & half == 1),resp(tmsSite==condition & half == 1),conf(tmsSite==condition & half == 1),nratings, [], 1);
             mratio_half1(subject,condition) = meta_MLE1.M_ratio;
+            metadprime_half1(subject,condition) = meta_MLE1.meta_da;
             meta_MLE2 = type2_SDT_MLE(stim(tmsSite==condition & half == 2),resp(tmsSite==condition & half == 2),conf(tmsSite==condition & half == 2),nratings, [], 1);
-            mratio_half2(subject,condition) = meta_MLE2.M_ratio;            
+            mratio_half2(subject,condition) = meta_MLE2.M_ratio;
+            metadprime_half2(subject,condition) = meta_MLE2.meta_da;         
         else
             load('Metacognition_data')
         end
+       
         accuracy(subject,condition) = mean(correct(tmsSite==condition));
         dprime(subject,condition) = data_analysis_resp(stim(tmsSite==condition), resp(tmsSite==condition));
         rt_mean(subject,condition) = mean(rt(tmsSite==condition));
+                      
+        %Half block measures for confidence and dprime
+        for halfBlock = 1:2
+            confidence_half(subject,condition, halfBlock) = mean(conf(tmsSite==condition & half == halfBlock));
+            dprime_half(subject,condition, halfBlock) =  data_analysis_resp(stim(tmsSite==condition & half==halfBlock), resp(tmsSite==condition & half==halfBlock));
+        end
+        
         if save_metacognition_data
-            save('Metacognition_data','mratio','mratio_half1','mratio_half2')
+            save('Metacognition_data','mratio','mratio_half1','mratio_half2','metadprime_half1','metadprime_half2')
         end
     end
+    dprime_all(subject) = data_analysis_resp(stim, resp);
 end
 
 %% Confidence analysis
@@ -98,8 +110,8 @@ ws_sem(3) = std(diff(:,2))/sqrt(length(diff));
 %Between subject SE
 bs_sem = nanstd(confidence)./sqrt(length(confidence)); 
 
-barPlotData(confidence,'Mean Confidence',pval,[2.2 2.85],ws_sem,bs_sem)
-
+barPlotData(confidence,'Confidence',pval,[2.2 2.85],ws_sem,bs_sem)
+saveFigure('Figure3')
 %% Metacognition analysis 
 
 % One-way repeated measures ANOVA for effect of TMS location on mratio
@@ -125,18 +137,75 @@ wsite_sem(:,2) = std(delta_mratio(:,2))./sqrt(num_subjects);
 wsite_sem(:,3) = std(delta_mratio(:,3))./sqrt(num_subjects);
 
 %Between site error bars
-bsite_sem(:,1) = std(delta_mratio(:,1)-delta_mratio(:,2))./sqrt(num_subjects);
+bsite_sem(:,1) = std(delta_mratio(:,1)-delta_mratio(:,3))./sqrt(num_subjects);
 bsite_sem(:,2) = std(delta_mratio(:,1)-delta_mratio(:,3))./sqrt(num_subjects);
 bsite_sem(:,3) = std(delta_mratio(:,2)-delta_mratio(:,3))./sqrt(num_subjects);
 
-barPlotData(delta_mratio,'\DeltaM_{Ratio}',pval_bsite,[-0.3 0.55],bsite_sem,wsite_sem)
- 
+barPlotData(delta_mratio,'\DeltaM_{ratio}',pval_bsite,[-0.3 0.55],bsite_sem,wsite_sem)
+saveFigure('Figure4')
+
+%% (Control) ANOVA on RT and accuracy  
 % One-way repeated measures ANOVA on RT
 onewayRepmeasuresANOVA(rt_mean)
 
 % One-way repeated measures ANOVA on accuracy
 onewayRepmeasuresANOVA(accuracy)
 
+%2-way repeated measures ANOVA on confidence, meta-d' and d'
+twowayRepmeasuresANOVA(mratio_half1,mratio_half2)
+
+%% (Control) Two-way repeated measures ANOVA on confidence
+twowayRepmeasuresANOVA(confidence_half(:,:,1),confidence_half(:,:,2))
+
+%Post hoc tests
+%Comparison within sites
+[pval_wsite] = withinSitesComparisons(confidence_half(:,:,1),confidence_half(:,:,2),'mean_Delta_Conf');
+%Comparion of change in mratio between sites
+[pval_bsite] = betweenSitesComparisons(confidence_half(:,:,2)-confidence_half(:,:,1),'Difference_in_DeltaConf');
+
+%Plot 
+delta_conf = confidence_half(:,:,2)-confidence_half(:,:,1);
+num_subjects = length(subjects);
+
+[wsite_sem, bsite_sem ] = calculateSEM(delta_conf);
+barPlotData(delta_conf,'\DeltaMean Confidence',pval_bsite,[-.2 .1],bsite_sem,wsite_sem)
+
+
+%% (Control) Two-way repeated measures ANOVA on dprime
+
+%Two-way repeated measures ANOVA on dprime
+twowayRepmeasuresANOVA(dprime_half(:,:,1),dprime_half(:,:,2))
+
+%Post hoc tests
+%Comparison within sites
+[pval_wsite] = withinSitesComparisons(dprime_half(:,:,1),dprime_half(:,:,2),'mean_DeltaDprime');
+%Comparion of change in mratio between sites
+[pval_bsite] = betweenSitesComparisons(dprime_half(:,:,2)-dprime_half(:,:,1),'Difference_in_DeltaDprime');
+
+%Plot 
+delta_dprime = dprime_half(:,:,2)-dprime_half(:,:,1);
+
+[wsite_sem, bsite_sem ] = calculateSEM(delta_dprime);
+barPlotData(delta_dprime,'\DeltaDprime',pval_bsite,[-.4 .2],bsite_sem,wsite_sem)
+
+%% (Control) Two-way repeated measures ANOVA on meta-dprime
+
+% Two-way repeated measures ANOVA on meta-dprime
+twowayRepmeasuresANOVA(metadprime_half1,metadprime_half2)
+
+%Post hoc tests
+%Comparison within sites
+[pval_wsite] = withinSitesComparisons(metadprime_half1,metadprime_half2,'mean_DeltaMetadprime');
+%Comparion of change in mratio between sites
+[pval_bsite] = betweenSitesComparisons(metadprime_half2-metadprime_half1,'Difference_in_DeltaMetadprime');
+
+%Plot 
+delta_metadprime = metadprime_half2-metadprime_half1;
+
+[wsite_sem, bsite_sem ] = calculateSEM(delta_metadprime);
+barPlotData(delta_metadprime,'\DeltaMeta-dprime',pval_bsite,[-.5 .2],bsite_sem,wsite_sem)
+
+
 %% Save dprime values for modelling
-dprime_mean = mean(dprime);
+dprime_mean = mean(dprime_all);
 save('DataforModelling','dprime_mean')
