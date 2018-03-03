@@ -9,8 +9,8 @@ clear
 clc
 close all
 
-compute_metacognition = 1;
-save_metacognition_data = 1;
+compute_metacognition = 0;
+save_metacognition_data = 0;
 
 % Subjects
 subject_id = [1 2 3 5 6 7 9 10 11 15 16 17 19 20 22 24 26 27];
@@ -163,13 +163,6 @@ twowayRepmeasuresANOVA(confidence_half(:,:,1),confidence_half(:,:,2))
 %Comparion of change in mratio between sites
 [pval_bsite] = betweenSitesComparisons(confidence_half(:,:,2)-confidence_half(:,:,1),'Difference_in_DeltaConf');
 
-%Plot 
-delta_conf = confidence_half(:,:,2)-confidence_half(:,:,1);
-num_subjects = length(subjects);
-
-[wsite_sem, bsite_sem ] = calculateSEM(delta_conf);
-barPlotData(delta_conf,'\DeltaMean Confidence',pval_bsite,[-.2 .1],bsite_sem,wsite_sem)
-
 
 %% (Control) Two-way repeated measures ANOVA on dprime
 
@@ -182,12 +175,6 @@ twowayRepmeasuresANOVA(dprime_half(:,:,1),dprime_half(:,:,2))
 %Comparion of change in mratio between sites
 [pval_bsite] = betweenSitesComparisons(dprime_half(:,:,2)-dprime_half(:,:,1),'Difference_in_DeltaDprime');
 
-%Plot 
-delta_dprime = dprime_half(:,:,2)-dprime_half(:,:,1);
-
-[wsite_sem, bsite_sem ] = calculateSEM(delta_dprime);
-barPlotData(delta_dprime,'\DeltaDprime',pval_bsite,[-.4 .2],bsite_sem,wsite_sem)
-
 %% (Control) Two-way repeated measures ANOVA on meta-dprime
 
 % Two-way repeated measures ANOVA on meta-dprime
@@ -199,12 +186,28 @@ twowayRepmeasuresANOVA(metadprime_half1,metadprime_half2)
 %Comparion of change in mratio between sites
 [pval_bsite] = betweenSitesComparisons(metadprime_half2-metadprime_half1,'Difference_in_DeltaMetadprime');
 
-%Plot 
-delta_metadprime = metadprime_half2-metadprime_half1;
+%% (Control) Mratio variance analysis 
 
-[wsite_sem, bsite_sem ] = calculateSEM(delta_metadprime);
-barPlotData(delta_metadprime,'\DeltaMeta-dprime',pval_bsite,[-.5 .2],bsite_sem,wsite_sem)
+%Check for normality of samples (P > 0.05 indicates that samples are
+%normally distributed)
+disp('----------- Lilliefors test of normality  -----------')
+disp('----------- Mratio from whole blocks across all TMS conditions -----------')
+[~,P] = lillietest(reshape(mratio,1,[]))
+disp('----------- Mratio from first half of blocks across all TMS conditions -----------')
+[~,P] = lillietest(reshape(mratio_half1,1,[]))
+disp('----------- Mratio from second half blocks across all TMS conditions -----------')
+[~,P] = lillietest(reshape(mratio_half2,1,[]))
 
+%2-sample variance test
+disp('----------- Two sample F test for equal variances  -----------')
+disp('----------- Between first and second halves -----------')
+[~,P,~,stats] = vartest2(reshape(mratio_half1,1,[]),reshape(mratio_half2,1,[]));
+F = stats.fstat
+P
+disp('----------- Between whole blocks and half blocks -----------')
+[~,P,~,stats] = vartest2(reshape(mratio,1,[]),reshape([mratio_half2, mratio_half1],1,[]));
+F = stats.fstat
+P
 
 %% Save dprime values for modelling
 dprime_mean = mean(dprime_all);
